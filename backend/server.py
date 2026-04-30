@@ -6,6 +6,7 @@ load_dotenv(ROOT_DIR / '.env')
 import os
 import csv
 import io
+import re
 import uuid
 import logging
 import bcrypt
@@ -19,6 +20,12 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+)
+logger = logging.getLogger(__name__)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -212,13 +219,14 @@ async def admin_list_inquiries(
 ):
     filt: dict = {}
     if q:
+        safe = re.escape(q)
         filt = {
             "$or": [
-                {"name": {"$regex": q, "$options": "i"}},
-                {"email": {"$regex": q, "$options": "i"}},
-                {"company": {"$regex": q, "$options": "i"}},
-                {"interested_in": {"$regex": q, "$options": "i"}},
-                {"message": {"$regex": q, "$options": "i"}},
+                {"name": {"$regex": safe, "$options": "i"}},
+                {"email": {"$regex": safe, "$options": "i"}},
+                {"company": {"$regex": safe, "$options": "i"}},
+                {"interested_in": {"$regex": safe, "$options": "i"}},
+                {"message": {"$regex": safe, "$options": "i"}},
             ]
         }
     total = await db.inquiries.count_documents(filt)
@@ -305,13 +313,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-)
-logger = logging.getLogger(__name__)
-
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

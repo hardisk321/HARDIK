@@ -42,3 +42,17 @@ Follow-up: Add a section for Barcode Labels, Printers and Ribbon selling — own
 - P2: Product catalog detail pages with filterable SKUs
 - P2: WhatsApp/calendar booking integration on contact CTA
 - P2: Case studies section + testimonials
+
+## Iteration 2 — Admin Dashboard (2026-04-30)
+- **JWT admin auth** (bcrypt + PyJWT, 24h tokens, seeded from `backend/.env`)
+- **Admin routes** (all protected): `/api/admin/login`, `/admin/me`, `/admin/inquiries` (paginated + regex-safe search), `/admin/inquiries/export.csv`, `DELETE /admin/inquiries/{id}`
+- **Admin UI**: `/admin/login` and `/admin` (protected) — table with search, pagination, detail drawer, CSV export, reply-via-email, delete
+- **Credentials**: see `/app/memory/test_credentials.md` (`admin@drishti-aidc.com` / `Drishti@2026`)
+- **Testing**: 19/19 backend pytest + 10/10 Playwright flows pass (iteration_2.json)
+- **Future-ready**: `NOTIFICATION_EMAIL` env var reserved for lead-email integration when email is registered
+
+## Backlog (remaining)
+- P1: Email notification on new lead (Resend/SendGrid) — waiting for user email
+- P2: Per-SKU catalog pages for printers & ribbons with filtering
+- P2: Brute-force lockout on admin login (5 fails → 15 min)
+- P2: WhatsApp quick-quote floating button
