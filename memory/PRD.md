@@ -56,3 +56,16 @@ Follow-up: Add a section for Barcode Labels, Printers and Ribbon selling — own
 - P2: Per-SKU catalog pages for printers & ribbons with filtering
 - P2: Brute-force lockout on admin login (5 fails → 15 min)
 - P2: WhatsApp quick-quote floating button
+
+## Iteration 3 — Email + Catalog + Brute-Force Lockout (2026-04-30)
+- **Resend email integration** (`/app/backend/email_service.py`) — wired via FastAPI BackgroundTasks on `POST /api/inquiries`. Graceful no-op: silently skipped when `RESEND_API_KEY` or `NOTIFICATION_EMAIL` is empty. **User still needs to provide a Resend API key (re_...) and recipient email in `.env` to activate.**
+- **Brute-force lockout** on admin login — 5 failed attempts per IP+email → 429 for 15 minutes (`Retry-After` header). Configurable via `LOGIN_LOCKOUT_MAX_ATTEMPTS` / `LOGIN_LOCKOUT_WINDOW_MIN` env vars. Successful login clears attempts.
+- **Static product catalog** at `/catalog` — 16 SKUs (6 printers / 5 labels / 5 ribbons) with category chips, live search, detail drawer, and one-click "Request Quote" that prefills the contact form with category-mapped interest + product name in message (via sessionStorage).
+- **Browse Catalog** CTA added to Products section on home page.
+- **Testing**: 30/30 backend pytests (11 new + 19 regression) + 10/10 Playwright flows. Zero bugs.
+
+## Backlog (remaining)
+- Awaiting user: Resend API key + recipient email → to activate lead notifications
+- P2: Per-SKU deep pages with images (currently text-only cards)
+- P2: Rate-limit public POST /api/inquiries to prevent spam
+- P2: Admin UI to manage catalog SKUs (move catalog to MongoDB)

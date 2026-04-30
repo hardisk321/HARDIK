@@ -15,13 +15,18 @@ export default function Contact() {
   useEffect(() => {
     const prefill = window.sessionStorage.getItem("drishti_prefill_interest");
     if (prefill) {
+      // Map catalog product → closest TECHS option
+      const p = prefill.toLowerCase();
+      let interest = "Not sure — advise me";
+      if (/printer/.test(p) || /zd\d|te\d|mh\d|pc\d|cl\dnx/.test(p)) interest = "Label Printers";
+      else if (/ribbon|wax|resin/.test(p)) interest = "Thermal Transfer Ribbons";
+      else if (/label|tag|void|polyester|thermal/.test(p)) interest = "Barcode Labels";
       setForm((f) => ({
         ...f,
-        interested_in: TECHS.includes(prefill) ? prefill : "Not sure — advise me",
+        interested_in: interest,
         message: `I'd like a quote for: ${prefill}.\n\n`,
       }));
       window.sessionStorage.removeItem("drishti_prefill_interest");
-      // scroll into view so user sees the prefilled form
       setTimeout(() => {
         document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
       }, 100);
