@@ -1,0 +1,107 @@
+{
+  "theme": "light",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) tailored for B2B Enterprise SaaS",
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "Inter",
+    "scales": {
+      "h1": "text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#00264d] leading-none",
+      "h2": "text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-[#00264d]",
+      "h3": "text-2xl sm:text-3xl font-medium tracking-tight text-[#003a7a]",
+      "h4": "text-xl font-medium text-[#003a7a]",
+      "body": "text-base lg:text-lg text-[#4A5568] leading-relaxed",
+      "overline": "text-sm font-bold uppercase tracking-[0.2em] text-[#0099bb]"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#FFFFFF",
+      "secondary": "#F8FAFC",
+      "tertiary": "#001A33"
+    },
+    "brand": {
+      "primary": "#00264d",
+      "secondary": "#003a7a",
+      "accent": "#00ccff",
+      "accent_muted": "#4d9ee0"
+    },
+    "text": {
+      "primary": "#00264d",
+      "secondary": "#4A5568",
+      "on_dark": "#FFFFFF",
+      "accent": "#0099bb"
+    },
+    "border": {
+      "light": "#E2E8F0",
+      "dark": "rgba(0, 38, 77, 0.1)"
+    }
+  },
+  "layout_and_spacing": {
+    "container": "max-w-7xl mx-auto px-6 sm:px-8 lg:px-12",
+    "section_padding": "py-24 sm:py-32",
+    "grid_system": "Use aggressive asymmetry and bento grids for features. Avoid standard equal-column bootstrap layouts.",
+    "surface_strategy": "Grid Borders (The 'Technical' Look). Expose the skeleton for the Solutions section using border-collapse style layout. Minimal shadows."
+  },
+  "components": {
+    "header": {
+      "style": "sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-[#00264d]/10",
+      "layout": "Flex container. Logo on left, nav links center (desktop), primary CTA on right. Mobile uses hamburger menu."
+    },
+    "hero_section": {
+      "layout": "Asymmetrical two-column grid. Left side (60%): Overline, massive H1, subtext, dual CTAs (Primary solid Navy, Secondary outline Navy). Right side (40%): Large visual representing data capture.",
+      "visuals": "Abstract technology visual or high-quality warehouse data scanning image."
+    },
+    "solutions_cards": {
+      "style": "Technical Grid layout. Use direct grid children with border-r and border-b in a pale navy color. No rounded corners, no soft shadows. Flat background.",
+      "interactions": "Hover state: Background slightly darkens to #F8FAFC, icon color shifts from Navy to Cyan."
+    },
+    "industries_grid": {
+      "style": "Tetris Grid. Span logic to mix horizontal and vertical rectangles. Heavy image focus.",
+      "image_treatment": "High contrast. Black/Navy overlay (bg-[#00264d]/40) over images. Text bottom-left aligned in pure white."
+    },
+    "contact_form": {
+      "library": "Shadcn UI (Form, Input, Textarea, Select)",
+      "style": "Flat solid borders (border-[#00264d]/20), sharp or slightly rounded corners (rounded-sm), no shadows. Input background #FFFFFF or #F8FAFC.",
+      "submit_button": "Full width, bg-[#00ccff] hover:bg-[#0099bb] text-[#00264d] font-semibold transition-colors."
+    },
+    "footer": {
+      "style": "bg-[#001A33] text-white py-20 px-6 sm:px-8 lg:px-12",
+      "layout": "4-column grid. Large brand logo and tagline on left. Links and contact info on right."
+    }
+  },
+  "motion_and_interactions": {
+    "hover_states": "Buttons and interactive elements must have clear hover states. Use transition-colors duration-200. Links should have subtle underline animations.",
+    "scroll": "Smooth scrolling utilizing standard CSS or Lenis if integrated.",
+    "reveals": "Staggered fade-up animations for grid items (e.g., Solutions cards) on scroll."
+  },
+  "accessibility": {
+    "contrast": "Ensure pure white text on Navy backgrounds, and Navy/Charcoal text on White/Light Gray backgrounds. Hover states must increase contrast.",
+    "testing": "All interactive elements MUST include a data-testid attribute in kebab-case."
+  },
+  "media": {
+    "icons": "lucide-react (stroke-width: 1.5 for a sharp, technical look)",
+    "image_urls": {
+      "hero_abstract": {
+        "url": "https://images.pexels.com/photos/30547584/pexels-photo-30547584.jpeg",
+        "description": "Abstract futuristic cyber landscape with digital matrix, representing 'Insight Into Data'. Use on the right side of the Hero section."
+      },
+      "industry_logistics": {
+        "url": "https://images.unsplash.com/photo-1714627798569-b3e36d409c4b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Warehouse with forklift, representing Logistics & Warehousing industry."
+      },
+      "industry_retail": {
+        "url": "https://images.unsplash.com/photo-1742238896849-303d74d8a8de?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Person using a modern POS tablet, representing Retail industry."
+      },
+      "industry_manufacturing": {
+        "url": "https://images.pexels.com/photos/34207359/pexels-photo-34207359.jpeg",
+        "description": "Close-up of a yellow industrial robotic arm, representing Manufacturing industry."
+      },
+      "industry_healthcare": {
+        "url": "https://images.unsplash.com/photo-1758691462620-9018c602ed3e?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Healthcare professional holding a tablet, representing Healthcare industry."
+      }
+    }
+  },
+  "instructions_to_main_agent": "Implement a B2B marketing website for DRISHTI. Prioritize the Swiss & High-Contrast layout style using pure HTML/Tailwind for structural sections (Hero, Industry Grid) to enable creative bento grid layouts. Use Shadcn exclusively for complex interactive components like the Contact Form. Ensure exact implementation of the color palette (Navy and Cyan) and strict adherence to the typography scales. All interactive elements must carry 'data-testid' attributes."
+}
