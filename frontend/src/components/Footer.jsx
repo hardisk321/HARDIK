@@ -61,8 +61,19 @@ export default function Footer() {
 
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-white/50">© {year} DRISHTI Auto ID Solution. All rights reserved.</p>
-          <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-white/50">AIDC · BARCODE · RFID · QR · NFC · OCR</p>
+          <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-white/50">© {year} {settings.company_name} Auto ID Solution. All rights reserved.</p>
+          <div className="flex items-center gap-5 font-mono text-[11px] tracking-[0.18em] uppercase">
+            <p className="text-white/50 hidden md:block">AIDC · BARCODE · RFID · QR · NFC · OCR</p>
+            <a
+              href="/admin/login"
+              data-testid="footer-admin-link"
+              className="text-white/40 hover:text-[#00ccff] transition-colors inline-flex items-center gap-1.5"
+              title="Authorized personnel only"
+            >
+              <span className="w-1 h-1 rounded-full bg-[#00ccff]/60" />
+              Admin
+            </a>
+          </div>
         </div>
       </div>
     </footer>
