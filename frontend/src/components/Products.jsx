@@ -1,5 +1,6 @@
 import React from "react";
-import { Tag, Printer, Layers, Award, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Tag, Printer, Layers, Award, ArrowRight, Package } from "lucide-react";
 
 const PRODUCTS = [
   {
@@ -146,14 +147,24 @@ export default function Products() {
             <p className="text-white/70 text-sm max-w-xl">
               Not sure which combination fits your application? Send us your label spec, printer model and use-case — we&apos;ll recommend the optimal ribbon and stock pairing within one business day.
             </p>
-            <a
-              href="#contact"
-              data-testid="products-quote-cta"
-              className="group inline-flex items-center gap-2 bg-[#00ccff] hover:bg-white text-[#00264d] text-sm font-semibold px-6 py-3 rounded-sm transition-colors shrink-0"
-            >
-              Get Pricing
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
-            </a>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <Link
+                to="/catalog"
+                data-testid="products-catalog-cta"
+                className="group inline-flex items-center gap-2 border border-white/30 hover:border-[#00ccff] text-white hover:text-[#00ccff] text-sm font-semibold px-5 py-3 rounded-sm transition-colors"
+              >
+                <Package className="w-4 h-4" strokeWidth={1.75} />
+                Browse Catalog
+              </Link>
+              <a
+                href="#contact"
+                data-testid="products-quote-cta"
+                className="group inline-flex items-center gap-2 bg-[#00ccff] hover:bg-white text-[#00264d] text-sm font-semibold px-6 py-3 rounded-sm transition-colors"
+              >
+                Get Pricing
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
+              </a>
+            </div>
           </div>
         </div>
       </div>

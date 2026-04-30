@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Mail, Phone, MapPin, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +10,23 @@ const TECHS = ["Barcode", "RFID", "QR Code", "NFC", "OCR", "IoT Data", "Barcode 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interested_in: "", message: "" });
   const [status, setStatus] = useState({ loading: false, success: false, error: null });
+
+  // Prefill interest when user comes from catalog detail drawer
+  useEffect(() => {
+    const prefill = window.sessionStorage.getItem("drishti_prefill_interest");
+    if (prefill) {
+      setForm((f) => ({
+        ...f,
+        interested_in: TECHS.includes(prefill) ? prefill : "Not sure — advise me",
+        message: `I'd like a quote for: ${prefill}.\n\n`,
+      }));
+      window.sessionStorage.removeItem("drishti_prefill_interest");
+      // scroll into view so user sees the prefilled form
+      setTimeout(() => {
+        document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, []);
 
   const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 

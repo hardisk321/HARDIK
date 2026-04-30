@@ -13,6 +13,7 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
+import Catalog from "@/pages/Catalog";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 function HomePage() {
@@ -38,6 +39,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/catalog" element={<Catalog />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"

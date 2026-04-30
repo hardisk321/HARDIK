@@ -11,7 +11,7 @@ import uuid
 import logging
 import bcrypt
 import jwt as pyjwt
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.cors import CORSMiddleware
@@ -19,6 +19,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
+
+from email_service import send_lead_notification
 
 
 logging.basicConfig(
@@ -39,6 +41,8 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 24
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@drishti-aidc.com').lower().strip()
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'Drishti@2026')
+LOCKOUT_MAX = int(os.environ.get('LOGIN_LOCKOUT_MAX_ATTEMPTS', '5'))
+LOCKOUT_WINDOW = int(os.environ.get('LOGIN_LOCKOUT_WINDOW_MIN', '15'))
 
 
 def hash_password(pw: str) -> str:
@@ -167,11 +171,13 @@ async def get_status_checks():
 
 
 @api_router.post("/inquiries", response_model=Inquiry, status_code=201)
-async def create_inquiry(payload: InquiryCreate):
+async def create_inquiry(payload: InquiryCreate, background: BackgroundTasks):
     inquiry = Inquiry(**payload.model_dump())
     doc = inquiry.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     await db.inquiries.insert_one(doc)
+    # Non-blocking email notification — silently skipped if keys unset
+    background.add_task(send_lead_notification, doc)
     return inquiry
 
 
@@ -186,12 +192,59 @@ async def list_inquiries_public(limit: int = 100):
 
 
 # ---------- Admin Routes ----------
+async def _get_lockout(identifier: str) -> Optional[datetime]:
+    rec = await db.login_attempts.find_one({"identifier": identifier}, {"_id": 0})
+    if not rec:
+        return None
+    until_raw = rec.get("locked_until")
+    if not until_raw:
+        return None
+    try:
+        until = datetime.fromisoformat(until_raw) if isinstance(until_raw, str) else until_raw
+    except ValueError:
+        return None
+    if until and until > datetime.now(timezone.utc):
+        return until
+    return None
+
+
+async def _record_failed_login(identifier: str) -> dict:
+    now = datetime.now(timezone.utc)
+    existing = await db.login_attempts.find_one({"identifier": identifier}, {"_id": 0}) or {}
+    attempts = int(existing.get("attempts", 0)) + 1
+    update = {"identifier": identifier, "attempts": attempts, "last_attempt": now.isoformat()}
+    if attempts >= LOCKOUT_MAX:
+        update["locked_until"] = (now + timedelta(minutes=LOCKOUT_WINDOW)).isoformat()
+        update["attempts"] = 0  # reset counter; lockout window enforces the wait
+    await db.login_attempts.update_one({"identifier": identifier}, {"$set": update}, upsert=True)
+    return update
+
+
+async def _clear_login_attempts(identifier: str) -> None:
+    await db.login_attempts.delete_one({"identifier": identifier})
+
+
 @api_router.post("/admin/login", response_model=LoginResponse)
-async def admin_login(payload: AdminLogin):
+async def admin_login(payload: AdminLogin, request: Request):
     email = payload.email.lower().strip()
+    client_ip = (request.client.host if request.client else "unknown") or "unknown"
+    identifier = f"{client_ip}:{email}"
+
+    locked_until = await _get_lockout(identifier)
+    if locked_until:
+        retry_seconds = max(1, int((locked_until - datetime.now(timezone.utc)).total_seconds()))
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed attempts. Try again in {retry_seconds // 60 + 1} minute(s).",
+            headers={"Retry-After": str(retry_seconds)},
+        )
+
     user = await db.users.find_one({"email": email, "role": "admin"})
     if not user or not verify_password(payload.password, user.get("password_hash", "")):
+        await _record_failed_login(identifier)
         raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    await _clear_login_attempts(identifier)
     token = create_access_token(user["id"], email)
     return LoginResponse(
         access_token=token,
@@ -300,6 +353,7 @@ async def seed_admin():
 async def on_startup():
     await db.users.create_index("email", unique=True)
     await db.inquiries.create_index([("created_at", -1)])
+    await db.login_attempts.create_index("identifier", unique=True)
     await seed_admin()
 
 
