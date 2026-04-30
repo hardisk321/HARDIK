@@ -29,6 +29,12 @@ export default function Footer() {
                   <li key={s}><a href="#solutions" className="hover:text-[#00ccff] transition-colors" data-testid={`footer-solution-${s.toLowerCase().replace(/\s+/g, "-")}`}>{s}</a></li>
                 ))}
               </ul>
+              <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#00ccff] mb-4 mt-6">Products</div>
+              <ul className="space-y-2.5 text-sm text-white/75">
+                {["Barcode Labels", "Label Printers", "TT Ribbons"].map((s) => (
+                  <li key={s}><a href="#products" className="hover:text-[#00ccff] transition-colors" data-testid={`footer-product-${s.toLowerCase().replace(/\s+/g, "-")}`}>{s}</a></li>
+                ))}
+              </ul>
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#00ccff] mb-4">Company</div>

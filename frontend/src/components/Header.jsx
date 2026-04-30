@@ -4,6 +4,7 @@ import { DrishtiMark, DrishtiWordmark } from "./Logo";
 
 const NAV = [
   { label: "Solutions", href: "#solutions" },
+  { label: "Products", href: "#products" },
   { label: "Industries", href: "#industries" },
   { label: "Why Drishti", href: "#why" },
   { label: "About", href: "#about" },

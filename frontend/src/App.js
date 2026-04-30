@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Solutions from "@/components/Solutions";
+import Products from "@/components/Products";
 import Industries from "@/components/Industries";
 import WhyDrishti, { About } from "@/components/WhyDrishti";
 import Contact from "@/components/Contact";
@@ -18,6 +19,7 @@ function HomePage() {
       <main>
         <Hero />
         <Solutions />
+        <Products />
         <Industries />
         <WhyDrishti />
         <About />

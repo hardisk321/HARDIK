@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const TECHS = ["Barcode", "RFID", "QR Code", "NFC", "OCR", "IoT Data", "Not sure — advise me"];
+const TECHS = ["Barcode", "RFID", "QR Code", "NFC", "OCR", "IoT Data", "Barcode Labels", "Label Printers", "Thermal Transfer Ribbons", "Not sure — advise me"];
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interested_in: "", message: "" });
