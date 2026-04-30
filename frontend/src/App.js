@@ -11,6 +11,9 @@ import Industries from "@/components/Industries";
 import WhyDrishti, { About } from "@/components/WhyDrishti";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/AdminDashboard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 function HomePage() {
   return (
@@ -26,7 +29,6 @@ function HomePage() {
         <Contact />
       </main>
       <Footer />
-      <Toaster position="top-right" richColors closeButton />
     </div>
   );
 }
@@ -36,8 +38,18 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<HomePage />} />
       </Routes>
+      <Toaster position="top-right" richColors closeButton />
     </BrowserRouter>
   );
 }

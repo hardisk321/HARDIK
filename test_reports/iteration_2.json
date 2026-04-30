@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration 2: Tested DRISHTI admin dashboard (P1 feature) end-to-end. Backend: 19/19 pytest tests passed covering admin login (success/wrong password/invalid email format/unknown user), /admin/me (valid/no token/malformed/wrong-secret-signed JWT), /admin/inquiries (auth required, envelope shape, newest-first sort, no _id leak, search filter q=, no-match, pagination skip/limit non-overlapping), CSV export (auth required, content-type=text/csv, Content-Disposition attachment, exact header row, contains seeded TEST_ rows), DELETE /admin/inquiries/{id} (200 then 404 on re-delete, 404 unknown id, auth required), and public POST /api/inquiries regression. Frontend: Playwright e2e at REACT_APP_BACKEND_URL — /admin without auth redirects to /admin/login; admin-login-form renders with all data-testids; wrong password surfaces error; valid login lands on /admin and persists drishti_admin_token + drishti_admin_user in localStorage; admin-inquiries-table renders with admin-total-count and pagination info; clicking a row opens admin-detail-drawer and close works; search box filters via API (got total=1 for unique seeded marker); Export CSV button triggers a real .csv download; logout clears token and redirects; public home page still renders.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/admin/login", "issue": "ADMIN_PASSWORD plaintext in backend/.env. Acceptable for MVP since hash is seeded on startup, but document a rotation strategy (since seed_admin re-syncs on every start)."},
+      {"endpoint": "GET /api/admin/inquiries", "issue": "q parameter is passed directly into MongoDB $regex. User input is not escaped, so characters like (, [, ?, *, + could be interpreted as regex metachars (matches still work, no injection risk against Mongo, but odd UX). Consider re.escape on q before building the filter."},
+      {"endpoint": "global", "issue": "logger is configured AFTER include_router/add_middleware (line ~313) but referenced inside seed_admin (lines 280, 288). Currently runs OK because seed_admin is invoked from on_startup which runs after module import, but ordering is fragile. Move logging.basicConfig + logger = ... to top of file (carry-over from iteration 1)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_api.py",
+    "/app/backend/tests/test_drishti_api.py",
+    "/app/test_reports/pytest/iteration_2_admin.xml"
+  ],
+  "action_items": [
+    "(Optional, low priority) Wrap q in re.escape() before passing to $regex in admin_list_inquiries to avoid surprising matches when users type regex metacharacters.",
+    "(Optional, low priority) Move logger initialisation above route handlers (still pending from iteration 1)."
+  ],
+  "critical_code_review_comments": [
+    "Auth implementation is solid: bcrypt $2b$ hashes (verified format via verify_password path), HTTPBearer dependency, 24h JWT expiry, role+type claims validated, password_hash and _id stripped from all admin responses (confirmed via test_login_success, test_me_with_valid_token).",
+    "seed_admin is idempotent and re-syncs hash if .env password changes (lines 281-288) — matches playbook requirement.",
+    "Frontend api.js axios interceptor correctly attaches Bearer token and auto-logs-out on 401 + redirects to /admin/login — clean.",
+    "All admin UI elements expose data-testid attributes; search/pagination/delete/drawer all addressable.",
+    "No brute-force lockout on /api/admin/login — playbook mentions 5-fail lockout. Not implemented. Acceptable for single-admin MVP behind known credentials, but flag for future hardening.",
+    "CORS_ORIGINS='*' combined with allow_credentials=True is not strictly compliant with the CORS spec; browsers will reject credentialed requests. App currently uses Bearer header (not cookies), so this works in practice — but if cookies are added later this must be tightened to explicit origin(s)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_admin_api.py (new — 19 tests, pytest classes per resource)",
+    "/app/test_reports/pytest/iteration_2_admin.xml (new — JUnit XML)"
+  ],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% (10/10 flows)"},
+  "test_credentials": "admin@drishti-aidc.com / Drishti@2026 (from /app/memory/test_credentials.md, seeded from backend/.env)",
+  "seed_data_creation": "Pytest seeded 3 TEST_ inquiries per run via public POST /api/inquiries (unique uuid suffix). One is deleted by test_delete_then_redelete_404; the other two remain. Plus 1 TEST_RegressPublic_* per run. Use the search marker 'uniquemarker_zzz1234' to find the seeded needle. After this run, dashboard total = 7.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Admin dashboard P1 fully verified. Backend regression suite split into test_drishti_api.py (public) + test_admin_api.py (admin). Both load REACT_APP_BACKEND_URL via dotenv from /app/frontend/.env. Token key in localStorage is 'drishti_admin_token'. CSV download verified via Playwright expect_download. Brute-force lockout NOT implemented (note for future security hardening, not blocking).",
+  "rca of the issue": "No bugs found. Admin auth + inquiry management feature is production-ready. Minor non-blocking suggestions only (regex escape on search, logger ordering, future brute-force lockout)."
+}
