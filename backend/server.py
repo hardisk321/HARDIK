@@ -22,6 +22,7 @@ from datetime import datetime, timezone, timedelta
 
 from email_service import send_lead_notification
 from products_seed import SEED_PRODUCTS, product_image
+from printers_imported import IMPORTED_PRINTERS
 
 
 logging.basicConfig(
@@ -158,6 +159,9 @@ class ProductBase(BaseModel):
     use_cases: List[str] = Field(default_factory=list)
     image_url: Optional[str] = Field(default=None, max_length=600)
     featured: bool = False
+    price: Optional[float] = Field(default=None, ge=0, le=99999999)
+    price_currency: str = Field(default="INR", max_length=8)
+    price_on_request: bool = True
 
 
 class Product(ProductBase):
@@ -185,6 +189,9 @@ class ProductUpdate(BaseModel):
     use_cases: Optional[List[str]] = None
     image_url: Optional[str] = Field(default=None, max_length=600)
     featured: Optional[bool] = None
+    price: Optional[float] = Field(default=None, ge=0, le=99999999)
+    price_currency: Optional[str] = Field(default=None, max_length=8)
+    price_on_request: Optional[bool] = None
 
 
 # ---------- Site Settings Models ----------
@@ -414,6 +421,10 @@ def _clean_product_doc(doc: dict) -> dict:
     doc.pop("_id", None)
     if not doc.get("image_url"):
         doc["image_url"] = product_image(doc)
+    # Ensure new price fields default cleanly for older docs
+    doc.setdefault("price", None)
+    doc.setdefault("price_currency", "INR")
+    doc.setdefault("price_on_request", True if doc.get("price") in (None, 0) else False)
     for k in ("created_at", "updated_at"):
         v = doc.get(k)
         if isinstance(v, str):
@@ -477,7 +488,9 @@ async def admin_update_product(slug: str, payload: ProductUpdate, current: dict 
     existing = await db.products.find_one({"slug": slug}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Product not found")
-    update = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+    # exclude_unset honours which fields the client actually sent (incl. explicit null
+    # for nullable fields like price/image_url so admins can CLEAR them)
+    update = payload.model_dump(exclude_unset=True)
     update["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.products.update_one({"slug": slug}, {"$set": update})
     refreshed = await db.products.find_one({"slug": slug}, {"_id": 0})
@@ -551,7 +564,8 @@ async def seed_admin():
 async def seed_products():
     """Insert any seed products that aren't already in MongoDB (idempotent, safe to re-run)."""
     inserted = 0
-    for p in SEED_PRODUCTS:
+    all_seeds = SEED_PRODUCTS + IMPORTED_PRINTERS
+    for p in all_seeds:
         existing = await db.products.find_one({"slug": p["slug"]})
         if existing:
             continue
@@ -559,6 +573,10 @@ async def seed_products():
             **p,
             "id": str(uuid.uuid4()),
             "image_url": p.get("image_url") or product_image(p),
+            "price": p.get("price"),
+            "price_currency": p.get("price_currency", "INR"),
+            "price_on_request": p.get("price_on_request", True),
+            "featured": p.get("featured", False),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }

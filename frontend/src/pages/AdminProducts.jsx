@@ -15,6 +15,7 @@ const EMPTY = {
   slug: "", category: "printer", name: "", brand: "", form: "",
   dpi: "", width: "", tags: "", short_desc: "", long_desc: "",
   specs: "", use_cases: "", image_url: "", featured: false,
+  price: "", price_currency: "INR", price_on_request: true,
 };
 
 const slugify = (s) => (s || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -66,6 +67,9 @@ export default function AdminProducts() {
       use_cases: (p.use_cases || []).join("\n"),
       image_url: p.image_url || "",
       featured: !!p.featured,
+      price: p.price ?? "",
+      price_currency: p.price_currency || "INR",
+      price_on_request: p.price_on_request !== false && (p.price == null || p.price === ""),
     },
     saving: false, error: null,
   });
@@ -91,6 +95,9 @@ export default function AdminProducts() {
       use_cases: f.use_cases.split("\n").map((s) => s.trim()).filter(Boolean),
       image_url: f.image_url.trim() || null,
       featured: !!f.featured,
+      price: f.price_on_request || f.price === "" ? null : Number(f.price),
+      price_currency: f.price_currency || "INR",
+      price_on_request: !!f.price_on_request || f.price === "",
     };
 
     try {
@@ -303,6 +310,46 @@ export default function AdminProducts() {
                 <input type="checkbox" checked={editing.form.featured} onChange={(e) => setEditing((ed) => ({ ...ed, form: { ...ed.form, featured: e.target.checked } }))} className="w-4 h-4 accent-[#00ccff]" data-testid="admin-product-field-featured" />
                 <span className="font-medium">Featured product</span> <span className="text-[#94A3B8] text-xs">(shows star badge on catalog cards)</span>
               </label>
+
+              <div className="pt-5 border-t border-[#00264d]/10">
+                <div className="font-mono text-[11px] tracking-[0.22em] uppercase text-[#0099bb] mb-3">Pricing</div>
+                <label className="flex items-center gap-3 text-sm text-[#00264d] cursor-pointer mb-4" data-testid="admin-product-field-por-wrapper">
+                  <input type="checkbox" checked={editing.form.price_on_request} onChange={(e) => setEditing((ed) => ({ ...ed, form: { ...ed.form, price_on_request: e.target.checked } }))} className="w-4 h-4 accent-[#00ccff]" data-testid="admin-product-field-price-on-request" />
+                  <span className="font-medium">Price on request</span>
+                  <span className="text-[#94A3B8] text-xs">(shows &ldquo;Price on request&rdquo; on the storefront — recommended for B2B)</span>
+                </label>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className={labelCls}>Price {editing.form.price_on_request && <span className="text-[#94A3B8]">(disabled)</span>}</label>
+                    <input
+                      type="number" step="0.01" min="0"
+                      disabled={editing.form.price_on_request}
+                      value={editing.form.price}
+                      onChange={(e) => setEditing((ed) => ({ ...ed, form: { ...ed.form, price: e.target.value } }))}
+                      placeholder="e.g. 35000"
+                      className={`${inputCls} ${editing.form.price_on_request ? "opacity-50" : ""}`}
+                      data-testid="admin-product-field-price"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Currency</label>
+                    <select
+                      value={editing.form.price_currency}
+                      onChange={(e) => setEditing((ed) => ({ ...ed, form: { ...ed.form, price_currency: e.target.value } }))}
+                      className={inputCls}
+                      data-testid="admin-product-field-currency"
+                    >
+                      <option value="INR">INR (₹)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="GBP">GBP (£)</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="mt-2 font-mono text-[10px] tracking-[0.14em] uppercase text-[#00264d]/50">
+                  Excluding GST. Public catalog will display this as &ldquo;{editing.form.price_on_request || !editing.form.price ? "Price on request" : `${editing.form.price_currency} ${editing.form.price || "—"}`}&rdquo;
+                </p>
+              </div>
 
               {editing.error && (
                 <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 px-4 py-3 rounded-sm" data-testid="admin-product-editor-error">

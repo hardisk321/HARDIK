@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, ArrowRight, Search, X, Filter, Package, Printer, Tag, Layers } from "lucide-react";
 import { DrishtiMark } from "@/components/Logo";
+import { priceDisplay } from "@/lib/price";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CAT_ICON = { printer: Printer, label: Tag, ribbon: Layers };
@@ -142,15 +143,23 @@ export default function Catalog() {
                     <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[#0099bb] mb-1.5">{p.brand} · {p.form}</div>
                     <h3 className="font-display text-xl font-semibold text-[#00264d] tracking-tight group-hover:text-[#0099bb] transition-colors">{p.name}</h3>
                     <p className="text-[#4A5568] text-[14px] leading-relaxed mt-2 mb-4 line-clamp-2 flex-1">{p.short_desc}</p>
-                    <div className="flex items-center justify-between pt-3 border-t border-dashed border-[#00264d]/10">
+                    <div className="pt-3 border-t border-dashed border-[#00264d]/10 space-y-3">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <div className="flex flex-col">
+                          <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[#00264d]/50">Price</span>
+                          <span className={`font-display text-base font-bold ${p.price_on_request || p.price == null ? "text-[#00264d]/70 italic" : "text-[#00264d]"}`} data-testid={`product-price-${p.slug}`}>
+                            {priceDisplay(p)}
+                          </span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 font-mono text-[11px] tracking-[0.18em] uppercase text-[#0099bb] group-hover:text-[#00264d] transition-colors">
+                          Details <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
+                        </span>
+                      </div>
                       <div className="flex gap-1 flex-wrap">
                         {p.tags.slice(0, 2).map((t) => (
                           <span key={t} className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#003a7a]">{t}</span>
                         ))}
                       </div>
-                      <span className="inline-flex items-center gap-1 font-mono text-[11px] tracking-[0.18em] uppercase text-[#0099bb] group-hover:text-[#00264d] transition-colors">
-                        Details <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
-                      </span>
                     </div>
                   </div>
                 </Link>

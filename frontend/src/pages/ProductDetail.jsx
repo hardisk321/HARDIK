@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail, ChevronRight } from "lucide-react";
 import { DrishtiMark } from "@/components/Logo";
+import { priceDisplay } from "@/lib/price";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -104,7 +105,19 @@ export default function ProductDetail() {
               ))}
             </div>
 
-            <div className="mt-8 p-6 bg-[#00264d] rounded-sm text-white">
+            <div className="mt-6 p-5 border border-[#00264d]/10 bg-[#F8FAFC] rounded-sm" data-testid="product-price-block">
+              <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#0099bb] mb-1.5">Indicative Price</div>
+              <div className={`font-display ${product.price_on_request || product.price == null ? "text-2xl text-[#00264d]/80 italic" : "text-3xl text-[#00264d] font-bold"}`}>
+                {priceDisplay(product)}
+              </div>
+              {product.price_on_request || product.price == null ? (
+                <p className="mt-2 text-xs text-[#4A5568]">Final pricing depends on quantity, configuration and consumables. Get a tailored quote in &lt;1 business day.</p>
+              ) : (
+                <p className="mt-2 text-xs text-[#4A5568]">Excludes GST. Bulk &amp; AMC pricing available — request a tailored quote for your volume.</p>
+              )}
+            </div>
+
+            <div className="mt-6 p-6 bg-[#00264d] rounded-sm text-white">
               <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#00ccff] mb-2">Interested in pricing?</div>
               <p className="text-white/80 text-sm leading-relaxed">Send us a quick note — we&apos;ll respond with a tailored quote, stock availability and matching consumables within one business day.</p>
               <div className="mt-5 flex flex-wrap gap-2">
