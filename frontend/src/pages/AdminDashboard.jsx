@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, Navigate, Link } from "react-router-dom";
-import { Search, Download, LogOut, RefreshCw, Trash2, Mail, Phone, Building2, Tag, Inbox, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Download, LogOut, RefreshCw, Trash2, Mail, Phone, Building2, Tag, Inbox, X, ChevronLeft, ChevronRight, Package } from "lucide-react";
 import { toast } from "sonner";
 import client, { auth, formatApiError } from "@/lib/api";
 import { DrishtiMark } from "@/components/Logo";
@@ -110,6 +110,10 @@ export default function AdminDashboard() {
           </Link>
 
           <div className="flex items-center gap-3">
+            <Link to="/admin/products" data-testid="admin-nav-products" className="hidden sm:inline-flex items-center gap-2 text-sm text-[#00264d] border border-[#00264d]/20 hover:bg-[#00264d] hover:text-white px-3.5 py-2 rounded-sm transition-colors">
+              <Package className="w-4 h-4" strokeWidth={1.75} />
+              <span>Manage catalog</span>
+            </Link>
             <span className="hidden sm:inline font-mono text-[11px] tracking-[0.14em] text-[#00264d]/70 uppercase" data-testid="admin-user-email">
               {user?.email}
             </span>

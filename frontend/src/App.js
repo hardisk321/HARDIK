@@ -13,7 +13,9 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminProducts from "@/pages/AdminProducts";
 import Catalog from "@/pages/Catalog";
+import ProductDetail from "@/pages/ProductDetail";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 function HomePage() {
@@ -40,12 +42,21 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/catalog" element={<Catalog />} />
+        <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/products"
+          element={
+            <ProtectedRoute>
+              <AdminProducts />
             </ProtectedRoute>
           }
         />

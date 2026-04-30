@@ -21,6 +21,7 @@ from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 
 from email_service import send_lead_notification
+from products_seed import SEED_PRODUCTS, product_image
 
 
 logging.basicConfig(
@@ -139,6 +140,51 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: AdminUser
+
+
+# ---------- Product Models ----------
+class ProductBase(BaseModel):
+    slug: str = Field(..., min_length=2, max_length=80, pattern=r"^[a-z0-9][a-z0-9-]*$")
+    category: str = Field(..., pattern=r"^(printer|label|ribbon)$")
+    name: str = Field(..., min_length=2, max_length=140)
+    brand: str = Field(..., min_length=1, max_length=80)
+    form: str = Field(..., min_length=1, max_length=80)
+    dpi: Optional[int] = Field(default=None, ge=0, le=2400)
+    width: Optional[str] = Field(default=None, max_length=40)
+    tags: List[str] = Field(default_factory=list)
+    short_desc: str = Field(..., min_length=5, max_length=280)
+    long_desc: str = Field(..., min_length=5, max_length=4000)
+    specs: List[str] = Field(default_factory=list)
+    use_cases: List[str] = Field(default_factory=list)
+    image_url: Optional[str] = Field(default=None, max_length=600)
+    featured: bool = False
+
+
+class Product(ProductBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ProductCreate(ProductBase):
+    pass
+
+
+class ProductUpdate(BaseModel):
+    category: Optional[str] = Field(default=None, pattern=r"^(printer|label|ribbon)$")
+    name: Optional[str] = Field(default=None, min_length=2, max_length=140)
+    brand: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    form: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    dpi: Optional[int] = Field(default=None, ge=0, le=2400)
+    width: Optional[str] = Field(default=None, max_length=40)
+    tags: Optional[List[str]] = None
+    short_desc: Optional[str] = Field(default=None, min_length=5, max_length=280)
+    long_desc: Optional[str] = Field(default=None, min_length=5, max_length=4000)
+    specs: Optional[List[str]] = None
+    use_cases: Optional[List[str]] = None
+    image_url: Optional[str] = Field(default=None, max_length=600)
+    featured: Optional[bool] = None
 
 
 # ---------- App ----------
@@ -327,6 +373,92 @@ async def admin_delete_inquiry(inquiry_id: str, current: dict = Depends(get_curr
     return {"ok": True, "deleted": inquiry_id}
 
 
+# ---------- Product Routes (public) ----------
+def _clean_product_doc(doc: dict) -> dict:
+    """Strip Mongo internals and ensure image_url is populated."""
+    if not doc:
+        return doc
+    doc.pop("_id", None)
+    if not doc.get("image_url"):
+        doc["image_url"] = product_image(doc)
+    for k in ("created_at", "updated_at"):
+        v = doc.get(k)
+        if isinstance(v, str):
+            try:
+                doc[k] = datetime.fromisoformat(v)
+            except ValueError:
+                pass
+    return doc
+
+
+@api_router.get("/products")
+async def list_products(
+    category: Optional[str] = Query(default=None, pattern=r"^(printer|label|ribbon)$"),
+    q: Optional[str] = None,
+    featured: Optional[bool] = None,
+    limit: int = Query(100, ge=1, le=500),
+):
+    filt: dict = {}
+    if category:
+        filt["category"] = category
+    if featured is not None:
+        filt["featured"] = featured
+    if q:
+        safe = re.escape(q)
+        filt["$or"] = [
+            {"name": {"$regex": safe, "$options": "i"}},
+            {"brand": {"$regex": safe, "$options": "i"}},
+            {"form": {"$regex": safe, "$options": "i"}},
+            {"short_desc": {"$regex": safe, "$options": "i"}},
+            {"tags": {"$regex": safe, "$options": "i"}},
+            {"slug": {"$regex": safe, "$options": "i"}},
+        ]
+    items = await db.products.find(filt, {"_id": 0}).sort("created_at", 1).to_list(limit)
+    return {"total": len(items), "items": [_clean_product_doc(i) for i in items]}
+
+
+@api_router.get("/products/{slug}")
+async def get_product(slug: str):
+    doc = await db.products.find_one({"slug": slug}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return _clean_product_doc(doc)
+
+
+# ---------- Product Routes (admin) ----------
+@api_router.post("/admin/products", response_model=Product, status_code=201)
+async def admin_create_product(payload: ProductCreate, current: dict = Depends(get_current_admin)):
+    existing = await db.products.find_one({"slug": payload.slug})
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Product with slug '{payload.slug}' already exists")
+    product = Product(**payload.model_dump())
+    doc = product.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    await db.products.insert_one(doc)
+    return product
+
+
+@api_router.put("/admin/products/{slug}", response_model=Product)
+async def admin_update_product(slug: str, payload: ProductUpdate, current: dict = Depends(get_current_admin)):
+    existing = await db.products.find_one({"slug": slug}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Product not found")
+    update = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.products.update_one({"slug": slug}, {"$set": update})
+    refreshed = await db.products.find_one({"slug": slug}, {"_id": 0})
+    return Product(**_clean_product_doc(refreshed))
+
+
+@api_router.delete("/admin/products/{slug}")
+async def admin_delete_product(slug: str, current: dict = Depends(get_current_admin)):
+    result = await db.products.delete_one({"slug": slug})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"ok": True, "deleted": slug}
+
+
 # ---------- Startup ----------
 async def seed_admin():
     existing = await db.users.find_one({"email": ADMIN_EMAIL})
@@ -349,12 +481,36 @@ async def seed_admin():
             logger.info(f"Admin password hash refreshed for {ADMIN_EMAIL}")
 
 
+async def seed_products():
+    """Insert any seed products that aren't already in MongoDB (idempotent, safe to re-run)."""
+    inserted = 0
+    for p in SEED_PRODUCTS:
+        existing = await db.products.find_one({"slug": p["slug"]})
+        if existing:
+            continue
+        doc = {
+            **p,
+            "id": str(uuid.uuid4()),
+            "image_url": p.get("image_url") or product_image(p),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        doc.pop("image_index", None)
+        await db.products.insert_one(doc)
+        inserted += 1
+    if inserted:
+        logger.info(f"Seeded {inserted} products")
+
+
 @app.on_event("startup")
 async def on_startup():
     await db.users.create_index("email", unique=True)
     await db.inquiries.create_index([("created_at", -1)])
     await db.login_attempts.create_index("identifier", unique=True)
+    await db.products.create_index("slug", unique=True)
+    await db.products.create_index("category")
     await seed_admin()
+    await seed_products()
 
 
 # Include the router in the main app

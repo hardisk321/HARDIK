@@ -1,0 +1,46 @@
+{
+  "summary": "Iteration 4: Tested MongoDB-backed products catalog (16 seeded), admin CRUD, and deep product pages. Backend: 59/59 pytest passed (23 new product tests + 36 regression). Frontend: 15/15 Playwright flows passed (public catalog filter/search/navigate, product detail render, Request Quote prefill, admin table 16 rows, create→edit→delete cycle, slug-disabled-on-edit). No blocking bugs. One minor issue: a few seed product image URLs appear to load blank in the admin table (likely Unsplash URL 404s for specific photo IDs).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/admin/products table thumbnails", "issues": ["Observed in screenshot: 4 of 16 product rows render with a blank image thumbnail cell (Wax Ribbons / ribbon-wax, Wax-Resin Ribbons / ribbon-wax-resin, Full Resin Ribbons / ribbon-resin, TSC MH240P / tsc-mh240p). Backend /api/products correctly returns image_url for every product, so this is either (a) a specific Unsplash photo URL returning a 404 on one or more curated URLs in products_seed.py (RIBBON_IMAGES / PRINTER_IMAGES pools), or (b) an Unsplash hotlinking/CORS hiccup on those IDs. Recommend main agent either host images locally in /app/frontend/public/products/ or verify each URL in PRINTER_IMAGES / RIBBON_IMAGES / LABEL_IMAGES returns 200 and swap any broken ones. Non-blocking — product detail page images render fine; only the small table thumbnails are affected visually."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_products_api.py",
+    "/app/test_reports/pytest/iteration_4.xml",
+    "/app/backend/tests/test_admin_api.py",
+    "/app/backend/tests/test_drishti_api.py",
+    "/app/backend/tests/test_lockout_email.py"
+  ],
+  "action_items": [
+    "(Optional / polish) Replace or self-host the 3–4 Unsplash image URLs that render blank in the /admin/products thumbnail column (ribbon-wax, ribbon-wax-resin, ribbon-resin, tsc-mh240p). Either verify each URL in /app/backend/products_seed.py PRINTER_IMAGES/RIBBON_IMAGES returns 200, or commit the assets under /app/frontend/public/products/ for full control."
+  ],
+  "critical_code_review_comments": [
+    "GET /products regex-escapes user-provided q via re.escape — safe against Mongo regex injection. Category filter validated at FastAPI level (422 for invalid).",
+    "POST /admin/products: duplicate-slug check runs before insert and returns 409 — correct. Also protected by a unique index on products.slug created at startup, so race condition still safe at DB level.",
+    "PUT /admin/products/{slug}: uses exclude_unset=True so truly partial updates (e.g. only name) leave untouched fields intact. updated_at is bumped every update. Verified via test_partial_update_preserves_untouched_fields.",
+    "_clean_product_doc() strips Mongo _id AND back-fills image_url from product_image() fallback when admin creates with empty image_url — good UX, always-rendering frontend.",
+    "seed_products() is idempotent — checks existing slug before insert, so safe to restart backend repeatedly (verified across multiple supervisor cycles; still 16 rows).",
+    "Slug immutability on edit is enforced only on the frontend (disabled input). Backend PUT has no slug field in ProductUpdate model, so even a crafted request cannot rename slug — defence in depth, good.",
+    "Minor: the cleanup in _clean_product_doc() mutates the dict in-place while also being called inside a list comprehension — acceptable here but could surprise a future reader. Not a bug.",
+    "/api/products doesn't paginate by default (limit=100, max 500). With only 16 products this is fine, but if the catalog grows past ~100 the frontend Catalog.jsx will need a page/skip handler.",
+    "All admin product endpoints correctly depend on get_current_admin → 401 without token (verified in TestAdminProductsAuth).",
+    "AdminProducts.jsx auto-slugifies name→slug in create mode and disables slug field in edit mode — verified behavioural correctness via Playwright (slug 'TEST Playwright Product' → 'test-playwright-product', edit mode is_disabled=True)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_products_api.py (new — 23 tests: list/filter/search/detail/auth/CRUD/regression)"
+  ],
+  "success_rate": {"backend": "100% (23/23 new + 36/36 regression = 59/59)", "frontend": "100% (9/9 public flows + 6/6 admin flows = 15/15)"},
+  "test_credentials": "admin@drishti-aidc.com / Drishti@2026",
+  "seed_data_creation": "Tests create a 'test-aidc-product' (pytest) and 'test-pw-product' (playwright) then delete them in teardown. Pre-cleanup also runs before each CRUD test to ensure idempotency. 16 seeded production products remain untouched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 4 complete. New backend test file: /app/backend/tests/test_products_api.py covers: list envelope shape ({total, items}), category=printer/label/ribbon (6/5/5), q=zebra (2 matches, regex-escaped, special-char safe), featured=true, _id suppression, image_url always populated, GET /products/{slug} 200+404, POST/PUT/DELETE /admin/products 401 without auth, 422 on invalid category/short slug, 201 create, 409 duplicate slug, partial PUT preserves fields, 404 on unknown slug PUT/DELETE re-delete, Create→GET verification pattern. Frontend: Playwright verified /catalog fetches via /api/products (16 items), filter/search, card→product/:slug navigation (no more drawer), full product detail render with image/specs/use-cases/related-3, 404 page for unknown slug, Request Quote CTA prefills contact form (message='I\\'d like a quote for: Zebra ZD621.'), admin-nav-products link, /admin/products table with 16 rows, create→edit→delete full cycle, slug-disabled-on-edit. The only observation worth fixing (optional): some Unsplash thumbnail URLs in products_seed.py render blank in the admin table; backend always returns image_url correctly.",
+  "rca of the issue": "No backend or functional bugs. Blank thumbnails in admin table (4 of 16 rows) are caused by specific external Unsplash image URLs in /app/backend/products_seed.py — either the photo IDs have been removed by Unsplash or hotlink blocking kicks in. Not a code issue; purely a content/asset choice. Product detail pages on /product/:slug are unaffected because they use different index positions in the image pools."
+}
