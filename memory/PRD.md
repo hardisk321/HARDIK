@@ -69,3 +69,16 @@ Follow-up: Add a section for Barcode Labels, Printers and Ribbon selling — own
 - P2: Per-SKU deep pages with images (currently text-only cards)
 - P2: Rate-limit public POST /api/inquiries to prevent spam
 - P2: Admin UI to manage catalog SKUs (move catalog to MongoDB)
+
+## Iteration 4 — MongoDB Catalog + Per-SKU Pages + Admin CRUD (2026-04-30)
+- **MongoDB-backed catalog** — migrated from static JS to `/api/products` (public GET list+detail) and `/api/admin/products` (admin POST/PUT/DELETE). 16 SKUs seeded idempotently from `backend/products_seed.py` on startup. Unique index on `slug`.
+- **Per-SKU pages** at `/product/:slug` — hero image, breadcrumb, long description, specs sidebar, use-cases, Request Quote CTA (prefills contact form), Email CTA, 3 related products.
+- **Admin CRUD UI** at `/admin/products` (protected) — searchable table with image thumbnails + featured stars, drawer-style create/edit form (auto-slug from name, slug immutable on edit), delete with confirmation. Accessible from Admin Dashboard via "Manage catalog" nav link.
+- **Images** — all 16 product images verified 200 (switched from Unsplash to Pexels for reliable hotlinking). Admin can paste any image URL.
+- **Testing**: 59/59 backend pytest (23 new + 36 regression) + 15/15 Playwright flows. Zero bugs.
+
+## Backlog remaining
+- Blocked on user: Resend API key + NOTIFICATION_EMAIL → activates lead emails
+- P2: Rate-limit public POST /api/inquiries to prevent spam
+- P2: Native image upload (S3 / cloud storage) instead of URL-paste
+- P2: Inquiry pipeline status (Assigned / Contacted / Quoted / Closed)

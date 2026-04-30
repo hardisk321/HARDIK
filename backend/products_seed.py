@@ -3,27 +3,29 @@ Images are curated Unsplash/Pexels URLs appropriate to each product category.
 """
 
 # Category-appropriate image pools (rotated per SKU)
+# Using Pexels (reliable hotlinking) + a handful of verified Unsplash URLs
 PRINTER_IMAGES = [
-    "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1645303509515-d6d1e85a6b41?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1612815292258-f4354f07f358?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1613423885632-4a065c1ae55d?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1586528116493-a029325540fa?auto=format&fit=crop&w=1200&q=80",
+    "https://images.pexels.com/photos/1314374/pexels-photo-1314374.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/4792733/pexels-photo-4792733.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/163100/circuit-circuit-board-resistor-computer-163100.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/6476587/pexels-photo-6476587.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/1181298/pexels-photo-1181298.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/3060328/pexels-photo-3060328.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/4483862/pexels-photo-4483862.jpeg?auto=compress&cs=tinysrgb&w=1200",
 ]
 LABEL_IMAGES = [
-    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1580901368919-7738efb0f87e?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1624365169364-0640dd10e180?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1567958451986-2de427a4a0be?auto=format&fit=crop&w=1200&q=80",
+    "https://images.pexels.com/photos/4393432/pexels-photo-4393432.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/5025669/pexels-photo-5025669.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/4483610/pexels-photo-4483610.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/7319092/pexels-photo-7319092.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/5872361/pexels-photo-5872361.jpeg?auto=compress&cs=tinysrgb&w=1200",
 ]
 RIBBON_IMAGES = [
-    "https://images.unsplash.com/photo-1609607569087-14a50d6c1bef?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1597589827703-f84d0f6e389a?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1580479389094-9a4e9ab80be1?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80",
+    "https://images.pexels.com/photos/7319091/pexels-photo-7319091.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/4483609/pexels-photo-4483609.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/4483774/pexels-photo-4483774.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/5872348/pexels-photo-5872348.jpeg?auto=compress&cs=tinysrgb&w=1200",
 ]
 
 
