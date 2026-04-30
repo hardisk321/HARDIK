@@ -84,6 +84,20 @@ async def send_lead_notification(inquiry: dict) -> Optional[str]:
     recipient = os.environ.get("NOTIFICATION_EMAIL", "").strip()
     sender = os.environ.get("RESEND_FROM", "DRISHTI Leads <onboarding@resend.dev>").strip()
 
+    # Fallback: if NOTIFICATION_EMAIL not in env, try the live site_settings document
+    if not recipient:
+        try:
+            from motor.motor_asyncio import AsyncIOMotorClient
+            mongo_url = os.environ.get("MONGO_URL")
+            db_name = os.environ.get("DB_NAME")
+            if mongo_url and db_name:
+                client = AsyncIOMotorClient(mongo_url)
+                doc = await client[db_name].site_settings.find_one({"_id": "singleton"}) or {}
+                recipient = (doc.get("notification_email") or "").strip()
+                client.close()
+        except Exception:
+            pass
+
     if not api_key:
         logger.info("send_lead_notification: skipped (RESEND_API_KEY not set)")
         return None

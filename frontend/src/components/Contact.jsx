@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Mail, Phone, MapPin, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mail, Phone, MapPin, ArrowRight, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const TECHS = ["Barcode", "RFID", "QR Code", "NFC", "OCR", "IoT Data", "Barcode Labels", "Label Printers", "Thermal Transfer Ribbons", "Not sure — advise me"];
 
 export default function Contact() {
+  const settings = useSiteSettings();
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interested_in: "", message: "" });
   const [status, setStatus] = useState({ loading: false, success: false, error: null });
 
@@ -72,20 +74,30 @@ export default function Contact() {
 
             <div className="mt-10 space-y-5">
               {[
-                { icon: Mail, label: "Email", value: "info@drishti-aidc.com" },
-                { icon: Phone, label: "Phone", value: "+91 98XXX XXXXX" },
-                { icon: MapPin, label: "Headquarters", value: "Bengaluru, India" },
+                { icon: Mail, label: "Email", value: settings.contact_email, href: `mailto:${settings.contact_email}` },
+                { icon: Phone, label: "Phone", value: settings.contact_phone, href: `tel:${(settings.contact_phone || "").replace(/\s+/g, "")}` },
+                { icon: MapPin, label: "Headquarters", value: settings.address },
+                ...(settings.business_hours ? [{ icon: Clock, label: "Hours", value: settings.business_hours }] : []),
               ].map((c) => {
                 const Icon = c.icon;
-                return (
-                  <div key={c.label} className="flex items-start gap-4" data-testid={`contact-info-${c.label.toLowerCase()}`}>
+                const inner = (
+                  <>
                     <div className="w-10 h-10 flex items-center justify-center bg-[#00264d] rounded-sm shrink-0">
                       <Icon className="w-4 h-4 text-[#00ccff]" strokeWidth={1.5} />
                     </div>
                     <div>
                       <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#0099bb]">{c.label}</div>
-                      <div className="font-display text-base font-semibold text-[#00264d] mt-0.5">{c.value}</div>
+                      <div className="font-display text-base font-semibold text-[#00264d] mt-0.5 whitespace-pre-wrap">{c.value}</div>
                     </div>
+                  </>
+                );
+                return c.href ? (
+                  <a key={c.label} href={c.href} className="flex items-start gap-4 hover:opacity-80 transition-opacity" data-testid={`contact-info-${c.label.toLowerCase()}`}>
+                    {inner}
+                  </a>
+                ) : (
+                  <div key={c.label} className="flex items-start gap-4" data-testid={`contact-info-${c.label.toLowerCase()}`}>
+                    {inner}
                   </div>
                 );
               })}

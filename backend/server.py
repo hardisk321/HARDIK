@@ -187,6 +187,39 @@ class ProductUpdate(BaseModel):
     featured: Optional[bool] = None
 
 
+# ---------- Site Settings Models ----------
+DEFAULT_SETTINGS = {
+    "company_name": "DRISHTI",
+    "tagline": "Your Insight Into Data.",
+    "contact_email": "info@drishti-aidc.com",
+    "contact_phone": "+91 98XXX XXXXX",
+    "address": "Bengaluru, India",
+    "business_hours": "Mon–Sat · 9:30 AM – 6:30 PM IST",
+    "notification_email": "",
+}
+
+
+class SiteSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    company_name: str = Field(default="DRISHTI", max_length=80)
+    tagline: str = Field(default="Your Insight Into Data.", max_length=160)
+    contact_email: str = Field(default="info@drishti-aidc.com", max_length=160)
+    contact_phone: str = Field(default="+91 98XXX XXXXX", max_length=60)
+    address: str = Field(default="Bengaluru, India", max_length=400)
+    business_hours: str = Field(default="Mon–Sat · 9:30 AM – 6:30 PM IST", max_length=160)
+    notification_email: str = Field(default="", max_length=160)
+
+
+class SiteSettingsUpdate(BaseModel):
+    company_name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    tagline: Optional[str] = Field(default=None, min_length=1, max_length=160)
+    contact_email: Optional[EmailStr] = None
+    contact_phone: Optional[str] = Field(default=None, min_length=1, max_length=60)
+    address: Optional[str] = Field(default=None, min_length=1, max_length=400)
+    business_hours: Optional[str] = Field(default=None, max_length=160)
+    notification_email: Optional[str] = Field(default=None, max_length=160)
+
+
 # ---------- App ----------
 app = FastAPI(title="DRISHTI - Auto ID Solution API")
 api_router = APIRouter(prefix="/api")
@@ -457,6 +490,40 @@ async def admin_delete_product(slug: str, current: dict = Depends(get_current_ad
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
     return {"ok": True, "deleted": slug}
+
+
+# ---------- Site Settings Routes ----------
+async def _get_settings_doc() -> dict:
+    doc = await db.site_settings.find_one({"_id": "singleton"}) or {}
+    merged = {**DEFAULT_SETTINGS, **{k: v for k, v in doc.items() if k != "_id"}}
+    return merged
+
+
+@api_router.get("/site-settings", response_model=SiteSettings)
+async def public_get_site_settings():
+    """Public endpoint — used by the marketing site Contact + Footer."""
+    return SiteSettings(**(await _get_settings_doc()))
+
+
+@api_router.get("/admin/site-settings", response_model=SiteSettings)
+async def admin_get_site_settings(current: dict = Depends(get_current_admin)):
+    return SiteSettings(**(await _get_settings_doc()))
+
+
+@api_router.put("/admin/site-settings", response_model=SiteSettings)
+async def admin_update_site_settings(payload: SiteSettingsUpdate, current: dict = Depends(get_current_admin)):
+    update = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+    if not update:
+        return SiteSettings(**(await _get_settings_doc()))
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["updated_by"] = current.get("email")
+    await db.site_settings.update_one(
+        {"_id": "singleton"}, {"$set": update}, upsert=True
+    )
+    # Reflect notification_email into the running env so email_service picks it up immediately
+    if "notification_email" in update:
+        os.environ["NOTIFICATION_EMAIL"] = update["notification_email"] or ""
+    return SiteSettings(**(await _get_settings_doc()))
 
 
 # ---------- Startup ----------

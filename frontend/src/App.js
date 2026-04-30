@@ -14,6 +14,7 @@ import Footer from "@/components/Footer";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminProducts from "@/pages/AdminProducts";
+import AdminSettings from "@/pages/AdminSettings";
 import Catalog from "@/pages/Catalog";
 import ProductDetail from "@/pages/ProductDetail";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -57,6 +58,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminProducts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute>
+              <AdminSettings />
             </ProtectedRoute>
           }
         />

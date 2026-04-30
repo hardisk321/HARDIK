@@ -1,7 +1,9 @@
 import React from "react";
 import { DrishtiMark } from "./Logo";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function Footer() {
+  const settings = useSiteSettings();
   const year = new Date().getFullYear();
   return (
     <footer data-testid="site-footer" className="bg-[#001A33] text-white">
@@ -16,9 +18,9 @@ export default function Footer() {
               </div>
             </div>
             <p className="mt-5 text-white/70 text-sm leading-relaxed max-w-md">
-              DRISHTI is a full-stack AIDC company building barcode, RFID, QR, NFC and OCR solutions for enterprise operations.
+              {settings.company_name} is a full-stack AIDC company building barcode, RFID, QR, NFC and OCR solutions for enterprise operations.
             </p>
-            <p className="mt-6 font-display italic text-lg text-[#00ccff]">&ldquo;Your Insight Into Data.&rdquo;</p>
+            <p className="mt-6 font-display italic text-lg text-[#00ccff]">&ldquo;{settings.tagline}&rdquo;</p>
           </div>
 
           <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
@@ -48,9 +50,9 @@ export default function Footer() {
             <div>
               <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#00ccff] mb-4">Reach us</div>
               <ul className="space-y-2.5 text-sm text-white/75">
-                <li>info@drishti-aidc.com</li>
-                <li>+91 98XXX XXXXX</li>
-                <li>Bengaluru, India</li>
+                <li><a href={`mailto:${settings.contact_email}`} className="hover:text-[#00ccff] transition-colors">{settings.contact_email}</a></li>
+                <li><a href={`tel:${(settings.contact_phone || "").replace(/\s+/g, "")}`} className="hover:text-[#00ccff] transition-colors">{settings.contact_phone}</a></li>
+                <li className="whitespace-pre-wrap">{settings.address}</li>
               </ul>
             </div>
           </div>
