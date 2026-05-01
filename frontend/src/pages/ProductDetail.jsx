@@ -4,6 +4,7 @@ import axios from "axios";
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail, ChevronRight } from "lucide-react";
 import { DrishtiMark } from "@/components/Logo";
 import { priceDisplay } from "@/lib/price";
+import { resolveImageUrl } from "@/lib/imageUrl";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -90,8 +91,8 @@ export default function ProductDetail() {
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
           <div className="lg:col-span-7">
             <div className="aspect-[4/3] bg-[#F8FAFC] border border-[#00264d]/10 overflow-hidden rounded-sm" data-testid="product-image-container">
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" data-testid="product-image"
-                   onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=1200&q=80"; }} />
+              <img src={resolveImageUrl(product.image_url)} alt={product.name} className="w-full h-full object-cover" data-testid="product-image"
+                   onError={(e) => { e.currentTarget.src = "https://images.pexels.com/photos/3060328/pexels-photo-3060328.jpeg?auto=compress&cs=tinysrgb&w=1200"; }} />
             </div>
           </div>
           <div className="lg:col-span-5">
@@ -210,7 +211,7 @@ export default function ProductDetail() {
               {related.map((r) => (
                 <Link key={r.slug} to={`/product/${r.slug}`} className="group bg-white border border-[#00264d]/10 hover:border-[#0099bb]/50 hover:shadow-lg transition-all overflow-hidden rounded-sm">
                   <div className="aspect-[4/3] bg-[#F8FAFC] overflow-hidden">
-                    <img src={r.image_url} alt={r.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={resolveImageUrl(r.image_url)} alt={r.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-5">
                     <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[#0099bb] mb-1">{r.brand}</div>

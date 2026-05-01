@@ -16,6 +16,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminProducts from "@/pages/AdminProducts";
 import AdminSettings from "@/pages/AdminSettings";
 import Catalog from "@/pages/Catalog";
+import CatalogCompare from "@/pages/CatalogCompare";
 import ProductDetail from "@/pages/ProductDetail";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -43,6 +44,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/catalog" element={<Catalog />} />
+        <Route path="/catalog/compare" element={<CatalogCompare />} />
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Save, X, ArrowLeft, Image as ImageIcon, AlertCircle, Search, Star, Package, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import client, { auth, formatApiError } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/imageUrl";
 import { DrishtiMark } from "@/components/Logo";
 
 const CATEGORIES = [
@@ -202,7 +203,7 @@ export default function AdminProducts() {
                       <td className="px-4 py-3">
                         <div className="w-12 h-12 bg-[#F8FAFC] border border-[#00264d]/10 overflow-hidden rounded-sm">
                           {p.image_url ? (
-                            <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                            <img src={resolveImageUrl(p.image_url)} alt={p.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                           ) : <ImageIcon className="w-5 h-5 m-3.5 text-[#94A3B8]" />}
                         </div>
                       </td>
@@ -277,13 +278,54 @@ export default function AdminProducts() {
               </div>
 
               <div>
-                <label className={labelCls}>Image URL</label>
-                <input value={editing.form.image_url} onChange={(e) => setEditing((ed) => ({ ...ed, form: { ...ed.form, image_url: e.target.value } }))} placeholder="https://…" className={inputCls} data-testid="admin-product-field-image" />
-                {editing.form.image_url && (
-                  <div className="mt-2 w-32 h-24 bg-[#F8FAFC] border border-[#00264d]/10 rounded-sm overflow-hidden">
-                    <img src={editing.form.image_url} alt="preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                <label className={labelCls}>Image</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 space-y-2">
+                    <input
+                      value={editing.form.image_url}
+                      onChange={(e) => setEditing((ed) => ({ ...ed, form: { ...ed.form, image_url: e.target.value } }))}
+                      placeholder="https://… or upload below"
+                      className={inputCls}
+                      data-testid="admin-product-field-image"
+                    />
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#0099bb] hover:text-[#00264d] font-medium" data-testid="admin-product-image-upload-label">
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/gif"
+                          className="hidden"
+                          data-testid="admin-product-image-upload"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) { toast.error("Max 5 MB"); return; }
+                            const fd = new FormData();
+                            fd.append("file", file);
+                            setEditing((ed) => ({ ...ed, uploading: true }));
+                            try {
+                              const { data } = await client.post("/admin/upload-image", fd, { headers: { "Content-Type": "multipart/form-data" } });
+                              setEditing((ed) => ({ ...ed, form: { ...ed.form, image_url: data.url }, uploading: false }));
+                              toast.success(`Uploaded (${Math.round(data.size / 1024)} KB)`);
+                            } catch (err) {
+                              setEditing((ed) => ({ ...ed, uploading: false }));
+                              toast.error(formatApiError(err));
+                            } finally {
+                              e.target.value = "";
+                            }
+                          }}
+                        />
+                        <ImageIcon className="w-4 h-4" strokeWidth={1.75} />
+                        <span>{editing.uploading ? "Uploading…" : "Upload from your device"}</span>
+                      </label>
+                      <span className="text-xs text-[#94A3B8]">PNG / JPG / WebP, max 5 MB</span>
+                    </div>
                   </div>
-                )}
+                  {editing.form.image_url && (
+                    <div className="w-32 h-24 bg-[#F8FAFC] border border-[#00264d]/10 rounded-sm overflow-hidden shrink-0">
+                      <img src={resolveImageUrl(editing.form.image_url)} alt="preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>

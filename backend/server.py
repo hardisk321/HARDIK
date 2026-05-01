@@ -9,10 +9,11 @@ import io
 import re
 import uuid
 import logging
+import base64
 import bcrypt
 import jwt as pyjwt
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Request, BackgroundTasks
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Request, BackgroundTasks, UploadFile, File
+from fastapi.responses import StreamingResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -503,6 +504,61 @@ async def admin_delete_product(slug: str, current: dict = Depends(get_current_ad
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
     return {"ok": True, "deleted": slug}
+
+
+# ---------- Image Upload (MongoDB-backed, no disk) ----------
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
+
+
+@api_router.post("/admin/upload-image")
+async def admin_upload_image(file: UploadFile = File(...), current: dict = Depends(get_current_admin)):
+    """Upload an image — stored as bytes in MongoDB (no local disk).
+    Returns {url} which is a backend-served URL the admin can paste into image_url.
+    """
+    content_type = (file.content_type or "").lower()
+    if content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unsupported image type. Allowed: {', '.join(sorted(ALLOWED_IMAGE_TYPES))}")
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty file")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail=f"Image too large (max {MAX_IMAGE_BYTES // (1024 * 1024)} MB)")
+
+    image_id = str(uuid.uuid4())
+    ext = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif"}.get(content_type, ".bin")
+    await db.images.insert_one({
+        "id": image_id,
+        "filename": (file.filename or f"{image_id}{ext}")[:200],
+        "content_type": content_type,
+        "size": len(data),
+        "data_b64": base64.b64encode(data).decode("ascii"),
+        "uploaded_by": current.get("email"),
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+    })
+    base_url = os.environ.get("PUBLIC_BACKEND_URL", "")
+    relative = f"/api/images/{image_id}{ext}"
+    url = (base_url.rstrip("/") + relative) if base_url else relative
+    return {"id": image_id, "url": url, "size": len(data), "content_type": content_type}
+
+
+@api_router.get("/images/{image_id}")
+async def public_get_image(image_id: str):
+    """Serve image bytes from MongoDB. Public — these URLs end up in product.image_url."""
+    # Allow optional extension suffix (e.g. /api/images/abc.png — strip extension)
+    bare_id = image_id.rsplit(".", 1)[0]
+    doc = await db.images.find_one({"id": bare_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Image not found")
+    try:
+        data = base64.b64decode(doc["data_b64"])
+    except Exception:
+        raise HTTPException(status_code=500, detail="Image data corrupted")
+    return Response(
+        content=data,
+        media_type=doc.get("content_type", "application/octet-stream"),
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 # ---------- Site Settings Routes ----------
